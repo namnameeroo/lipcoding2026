@@ -1,0 +1,17 @@
+name: ddak
+metadata:
+  template: ddak-nextjs@0.0.1
+
+services:
+  web:
+    project: .
+    language: js
+    host: appservice
+
+hooks:
+  prepackage:
+    posix:
+      shell: sh
+      run: npm ci && npm run build
+      continueOnError: false
+      interactive: false

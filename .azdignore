@@ -1,0 +1,12 @@
+# azd 배포 시 제외할 파일들
+.git
+.next/cache
+node_modules
+*.log
+.env.local
+.env*.local
+tasks/
+BRAINSTORM.md
+CLAUDE.md
+REFERENCES.md
+app.zip

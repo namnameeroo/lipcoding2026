@@ -13,6 +13,14 @@ const requestSchema = z
 
 const maxRequestBodyBytes = 4_096;
 const trustClientIpHeaders = process.env.TRUST_CLIENT_IP_HEADERS === "true";
+const clientIdentifierCookieName = "ddak.client-id";
+const clientRateLimitPerMinute = 5;
+const globalRateLimitPerMinute = 300;
+
+type ClientIdentifier = {
+  rateLimitKey: string;
+  cookieValueToSet?: string;
+};
 
 class RequestBodyTooLargeError extends Error {
   constructor() {
@@ -24,7 +32,19 @@ function firstHeaderValue(value: string | null): string | null {
   return value?.split(",")[0]?.trim() || null;
 }
 
-function getClientIdentifier(request: NextRequest): string | null {
+function createClientCookieValue(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function isValidClientCookieValue(value: string): boolean {
+  return /^[a-f0-9-]{36}$/i.test(value);
+}
+
+function getTrustedClientIp(request: NextRequest): string | null {
   if (!trustClientIpHeaders) {
     return null;
   }
@@ -35,6 +55,27 @@ function getClientIdentifier(request: NextRequest): string | null {
   );
 }
 
+function getClientIdentifier(request: NextRequest): ClientIdentifier {
+  const trustedClientIp = getTrustedClientIp(request);
+
+  if (trustedClientIp) {
+    return {rateLimitKey: `trusted-ip:${trustedClientIp}`};
+  }
+
+  const cookieValue = request.cookies.get(clientIdentifierCookieName)?.value;
+
+  if (cookieValue && isValidClientCookieValue(cookieValue)) {
+    return {rateLimitKey: `cookie:${cookieValue}`};
+  }
+
+  const generatedCookieValue = createClientCookieValue();
+
+  return {
+    rateLimitKey: `cookie:${generatedCookieValue}`,
+    cookieValueToSet: generatedCookieValue,
+  };
+}
+
 function errorResponse(message: string, status: number) {
   return NextResponse.json({error: message}, {status});
 }
@@ -42,6 +83,31 @@ function errorResponse(message: string, status: number) {
 function setRateLimitHeaders(response: NextResponse, remaining: number, resetAt: number) {
   response.headers.set("X-RateLimit-Remaining", String(remaining));
   response.headers.set("X-RateLimit-Reset", String(resetAt));
+}
+
+function setClientIdentifierCookie(response: NextResponse, clientIdentifier: ClientIdentifier) {
+  if (!clientIdentifier.cookieValueToSet) {
+    return;
+  }
+
+  response.cookies.set(clientIdentifierCookieName, clientIdentifier.cookieValueToSet, {
+    httpOnly: true,
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+}
+
+function finalizeResponse(
+  response: NextResponse,
+  clientIdentifier: ClientIdentifier,
+  remaining: number,
+  resetAt: number,
+) {
+  setRateLimitHeaders(response, remaining, resetAt);
+  setClientIdentifierCookie(response, clientIdentifier);
+
+  return response;
 }
 
 function isJsonRequest(request: NextRequest): boolean {
@@ -89,33 +155,45 @@ async function parseJsonBody(request: NextRequest): Promise<unknown> {
 }
 
 export async function POST(request: NextRequest) {
-  const globalRateLimit = checkRateLimit("api:analyze:global", 60);
+  const clientIdentifier = getClientIdentifier(request);
+  const globalRateLimit = checkRateLimit("api:analyze:global", globalRateLimitPerMinute);
 
   if (!globalRateLimit.allowed) {
     const response = errorResponse("요청이 너무 많아요. 잠시 후 다시 시도해 주세요.", 429);
-    setRateLimitHeaders(response, 0, globalRateLimit.resetAt);
-    return response;
+    return finalizeResponse(response, clientIdentifier, 0, globalRateLimit.resetAt);
   }
 
-  const clientIdentifier = getClientIdentifier(request);
-  const clientRateLimit = clientIdentifier
-    ? checkRateLimit(`api:analyze:client:${clientIdentifier}`)
-    : null;
+  const clientRateLimit = checkRateLimit(
+    `api:analyze:client:${clientIdentifier.rateLimitKey}`,
+    clientRateLimitPerMinute,
+  );
 
-  if (clientRateLimit && !clientRateLimit.allowed) {
+  if (!clientRateLimit.allowed) {
     const response = errorResponse("요청이 너무 많아요. 잠시 후 다시 시도해 주세요.", 429);
-    setRateLimitHeaders(response, 0, clientRateLimit.resetAt);
-    return response;
+    return finalizeResponse(response, clientIdentifier, 0, clientRateLimit.resetAt);
   }
+
+  const remaining = Math.min(globalRateLimit.remaining, clientRateLimit.remaining);
+  const resetAt = Math.max(globalRateLimit.resetAt, clientRateLimit.resetAt);
 
   if (!isJsonRequest(request)) {
-    return errorResponse("JSON 요청만 지원해요.", 415);
+    return finalizeResponse(
+      errorResponse("JSON 요청만 지원해요.", 415),
+      clientIdentifier,
+      remaining,
+      resetAt,
+    );
   }
 
   const contentLength = Number(request.headers.get("content-length") ?? 0);
 
   if (contentLength > maxRequestBodyBytes) {
-    return errorResponse("요청이 너무 커요.", 413);
+    return finalizeResponse(
+      errorResponse("요청이 너무 커요.", 413),
+      clientIdentifier,
+      remaining,
+      resetAt,
+    );
   }
 
   let body: unknown;
@@ -124,35 +202,45 @@ export async function POST(request: NextRequest) {
     body = await parseJsonBody(request);
   } catch (error) {
     if (error instanceof RequestBodyTooLargeError) {
-      return errorResponse("요청이 너무 커요.", 413);
+      return finalizeResponse(
+        errorResponse("요청이 너무 커요.", 413),
+        clientIdentifier,
+        remaining,
+        resetAt,
+      );
     }
 
     console.warn("Invalid JSON sent to /api/analyze", error);
-    return errorResponse("요청 형식이 올바르지 않아요.", 400);
+    return finalizeResponse(
+      errorResponse("요청 형식이 올바르지 않아요.", 400),
+      clientIdentifier,
+      remaining,
+      resetAt,
+    );
   }
 
   const parsed = requestSchema.safeParse(body);
 
   if (!parsed.success) {
-    return errorResponse("목표는 1자 이상 300자 이하로 입력해 주세요.", 400);
+    return finalizeResponse(
+      errorResponse("목표는 1자 이상 300자 이하로 입력해 주세요.", 400),
+      clientIdentifier,
+      remaining,
+      resetAt,
+    );
   }
-
-  const remaining = Math.min(
-    globalRateLimit.remaining,
-    clientRateLimit?.remaining ?? globalRateLimit.remaining,
-  );
-  const resetAt = Math.max(
-    globalRateLimit.resetAt,
-    clientRateLimit?.resetAt ?? globalRateLimit.resetAt,
-  );
 
   try {
     const result = await analyzeGoal(parsed.data.goal);
     const response = NextResponse.json(result);
-    setRateLimitHeaders(response, remaining, resetAt);
-    return response;
+    return finalizeResponse(response, clientIdentifier, remaining, resetAt);
   } catch (error) {
     console.error("Goal analysis failed", error);
-    return errorResponse("목표를 분석하지 못했어요. 잠시 후 다시 시도해 주세요.", 500);
+    return finalizeResponse(
+      errorResponse("목표를 분석하지 못했어요. 잠시 후 다시 시도해 주세요.", 500),
+      clientIdentifier,
+      remaining,
+      resetAt,
+    );
   }
 }

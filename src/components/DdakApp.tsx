@@ -66,6 +66,7 @@ export function DdakApp() {
   const currentTask = session?.tasks[session.currentIndex] ?? null;
   const moodTask =
     session?.tasks.find((task) => task.id === moodTaskId) ?? currentTask;
+  const nonBlockingStorageError = storageState === "invalid" ? null : storageError;
 
   async function handleGoalSubmit(goal: string) {
     const normalizedGoal = goal.trim();
@@ -136,6 +137,17 @@ export function DdakApp() {
             </button>
           ) : null}
         </header>
+
+        {nonBlockingStorageError ? (
+          <motion.div
+            initial={{opacity: 0, y: -8}}
+            animate={{opacity: 1, y: 0}}
+            role="status"
+            className="mt-5 rounded-3xl border border-amber-200/80 bg-amber-50/80 px-5 py-3 text-sm font-semibold leading-6 text-amber-900 shadow-lg shadow-amber-100/50 backdrop-blur"
+          >
+            {nonBlockingStorageError}
+          </motion.div>
+        ) : null}
 
         <div className="grid flex-1 place-items-center py-8">
           <AnimatePresence mode="wait">

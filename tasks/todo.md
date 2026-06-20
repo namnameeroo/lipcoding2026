@@ -14,13 +14,7 @@ entry_format: "- [ ] Task description - owner - date or milestone"
 
 ### Infrastructure / Azure 배포 준비
 - [ ] Azure 구독, 리소스 그룹, 리전 확정 - 인프라 - pre-deploy
-- [ ] 배포 대상 확정: App Service Linux(Node.js 20+) 우선, Static Web Apps/Container Apps 대안 비교 - 인프라 - pre-deploy
-- [ ] `OPENAI_API_KEY` 비밀 관리 방식 확정(App Settings 단독 또는 Key Vault 연동) - 인프라 - pre-deploy
-- [ ] App Service Plan/Web App IaC 작성(Bicep, Terraform, 또는 azd) - 인프라 - pre-deploy
-- [ ] GitHub Actions 또는 azd 기반 CI/CD 구성(`npm ci`, `npm run lint`, `npm run build`, deploy) - 인프라 - pre-deploy
 - [ ] 스테이징/프로덕션 환경 이름, URL, 배포 슬롯 전략 정리 - 인프라 - pre-deploy
-- [ ] Application Insights / Log Analytics 연결 및 `/api/analyze` 오류·지연·429 모니터링 설정 - 인프라 - pre-deploy
-- [ ] 배포 후 smoke test 경로와 수동 검증 시나리오 정의 - QA/인프라 - pre-deploy
 - [ ] 다중 인스턴스 배포 전 rate limit 저장소 외부화(Redis/KV 등) 검토 - 백엔드/인프라 - production-readiness
 - [ ] OpenAI 사용량 예산, Azure 비용 알림, App Service SKU 가드레일 설정 - 인프라 - production-readiness
 
@@ -55,3 +49,13 @@ entry_format: "- [ ] Task description - owner - date or milestone"
 - [x] `ParticleBurst.tsx` 시작/완료 보상 효과 - 2026-06-20
 - [x] 오류 문구·접근성·반응형 점검 - 2026-06-20
 - [x] `npm run lint` / `npm run build` 통과 - 2026-06-20
+- [x] `/api/analyze` rate limit 식별자 재설계: 기본 HttpOnly 세션 쿠키 + 선택적 신뢰 플랫폼 헤더 전략 적용 - 2026-06-20
+- [x] `taskSessionStore` LocalStorage get/set/remove 예외 처리 및 사용자 메시지 분리 - 2026-06-20
+- [x] `EmotionVisual` WebGL 감지 컨텍스트 해제 및 3D 렌더 실패 시 2D fallback 전환 - 2026-06-20
+- [x] API 검증, rate limit, LocalStorage 실패 처리 회귀 테스트 도입 검토(테스트 도구 미구성, lint/build 기준 유지) - 2026-06-20
+- [x] 배포 대상 확정: Azure App Service Linux(Node.js 20+) - 2026-06-20
+- [x] `OPENAI_API_KEY` 비밀 관리 방식 확정: Bicep secure parameter → App Service App Settings - 2026-06-20
+- [x] App Service Plan/Web App IaC 작성(Bicep + azd baseline) - 2026-06-20
+- [x] GitHub Actions 기반 CI/CD 구성(`npm ci`, `npm run lint`, `npm run build`, App Service deploy) - 2026-06-20
+- [x] Application Insights / Log Analytics 연결 Bicep 구성 - 2026-06-20
+- [x] 배포 후 smoke test 경로 정의(`/api/health`) 및 GitHub Actions smoke test 구성 - 2026-06-20

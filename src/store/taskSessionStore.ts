@@ -10,8 +10,19 @@ import type {
 } from "@/types/tasks";
 
 const storageKey = "ddak.task-session.v1";
+const storageReadErrorMessage =
+  "브라우저 저장소를 읽을 수 없어 이전 진행 상태를 복구하지 못했어요.";
+const storageWriteErrorMessage =
+  "브라우저 저장소를 사용할 수 없어 이번 진행 상태는 새로고침 후 복구되지 않을 수 있어요.";
+const storageClearErrorMessage =
+  "브라우저 저장소를 지우지 못했어요. 이번 화면에서는 새로 시작할 수 있지만 새로고침 후 이전 상태가 다시 보일 수 있어요.";
 
 type StorageState = "unknown" | "ready" | "invalid";
+
+type StorageReadResult =
+  | {status: "empty"}
+  | {status: "value"; raw: string}
+  | {status: "unavailable"; message: string};
 
 type TaskSessionStore = {
   session: TaskSession | null;
@@ -37,22 +48,47 @@ function createId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
-function persistSession(session: TaskSession | null) {
+function readPersistedSession(): StorageReadResult {
   if (typeof window === "undefined") {
-    return;
+    return {status: "empty"};
   }
 
-  if (!session) {
-    window.localStorage.removeItem(storageKey);
-    return;
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+
+    if (!raw) {
+      return {status: "empty"};
+    }
+
+    return {status: "value", raw};
+  } catch (error) {
+    console.warn("Failed to read task session storage", error);
+    return {status: "unavailable", message: storageReadErrorMessage};
+  }
+}
+
+function persistSession(session: TaskSession | null): string | null {
+  if (typeof window === "undefined") {
+    return null;
   }
 
-  const payload: PersistedTaskSession = {
-    schemaVersion: 1,
-    session,
-  };
+  try {
+    if (!session) {
+      window.localStorage.removeItem(storageKey);
+      return null;
+    }
 
-  window.localStorage.setItem(storageKey, JSON.stringify(payload));
+    const payload: PersistedTaskSession = {
+      schemaVersion: 1,
+      session,
+    };
+
+    window.localStorage.setItem(storageKey, JSON.stringify(payload));
+    return null;
+  } catch (error) {
+    console.warn("Failed to persist task session storage", error);
+    return session ? storageWriteErrorMessage : storageClearErrorMessage;
+  }
 }
 
 function getFirstOpenIndex(session: TaskSession): number | null {
@@ -108,9 +144,19 @@ export const useTaskSessionStore = create<TaskSessionStore>((set, get) => ({
       return;
     }
 
-    const raw = window.localStorage.getItem(storageKey);
+    const storedSession = readPersistedSession();
 
-    if (!raw) {
+    if (storedSession.status === "unavailable") {
+      set({
+        session: null,
+        pendingResumeSession: null,
+        storageState: "ready",
+        storageError: storedSession.message,
+      });
+      return;
+    }
+
+    if (storedSession.status === "empty") {
       set({storageState: "ready", storageError: null});
       return;
     }
@@ -118,7 +164,7 @@ export const useTaskSessionStore = create<TaskSessionStore>((set, get) => ({
     let parsedJson: unknown;
 
     try {
-      parsedJson = JSON.parse(raw);
+      parsedJson = JSON.parse(storedSession.raw);
     } catch {
       set({
         storageState: "invalid",
@@ -177,24 +223,26 @@ export const useTaskSessionStore = create<TaskSessionStore>((set, get) => ({
   },
 
   discardSession: () => {
-    persistSession(null);
+    const storageError = persistSession(null);
+
     set({
       session: null,
       pendingResumeSession: null,
       storageState: "ready",
-      storageError: null,
+      storageError,
       moodTaskId: null,
     });
   },
 
   createSession: (result) => {
     const session = buildSession(result);
-    persistSession(session);
+    const storageError = persistSession(session);
+
     set({
       session,
       pendingResumeSession: null,
       storageState: "ready",
-      storageError: null,
+      storageError,
       moodTaskId: null,
       burstKey: get().burstKey + 1,
     });
@@ -214,10 +262,11 @@ export const useTaskSessionStore = create<TaskSessionStore>((set, get) => ({
         : task,
     );
     const updatedSession = {...session, tasks, updatedAt: now};
+    const storageError = persistSession(updatedSession);
 
-    persistSession(updatedSession);
     set({
       session: updatedSession,
+      storageError,
       burstKey: get().burstKey + 1,
     });
   },
@@ -242,10 +291,11 @@ export const useTaskSessionStore = create<TaskSessionStore>((set, get) => ({
         : task,
     );
     const updatedSession = {...session, tasks, updatedAt: now};
+    const storageError = persistSession(updatedSession);
 
-    persistSession(updatedSession);
     set({
       session: updatedSession,
+      storageError,
       moodTaskId: currentTask.id,
       burstKey: get().burstKey + 1,
     });
@@ -274,10 +324,11 @@ export const useTaskSessionStore = create<TaskSessionStore>((set, get) => ({
       updatedAt: now,
       completedAt,
     };
+    const storageError = persistSession(updatedSession);
 
-    persistSession(updatedSession);
     set({
       session: updatedSession,
+      storageError,
       moodTaskId: null,
     });
   },

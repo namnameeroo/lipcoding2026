@@ -52,14 +52,16 @@ npm run start
 - Resource Group
 - App Service Plan (Linux)
 - Web App for Node.js 20+
-- App Settings: `OPENAI_API_KEY`, `NODE_ENV=production`
+- App Settings: `OPENAI_API_KEY`, `NODE_ENV=production`, `APPLICATIONINSIGHTS_CONNECTION_STRING`
 - Application Insights / Log Analytics for runtime errors, latency, and `/api/analyze` 429 monitoring
 - Optional: Key Vault integration for secret management
 
-배포 파이프라인은 `npm ci`, `npm run lint`, `npm run build`, Azure 배포 순서로 구성합니다. 실제 Azure 구독, 리전, SKU, 스테이징/프로덕션 분리는 아직 확정 전이며 후속 인프라 작업은 [`tasks/todo.md`](tasks/todo.md)에 정리합니다.
+`infra/`는 Azure App Service Linux, Application Insights, Log Analytics를 Bicep으로 정의하고, `azure.yaml`은 azd 배포 기준을 제공합니다. GitHub Actions 배포는 `.github/workflows/azure-app-service.yml`에 있으며 OIDC 기반 `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `AZURE_WEBAPP_NAME` 시크릿이 필요합니다. 배포 후 smoke test는 `/api/health`를 호출합니다.
+
+실제 Azure 구독, 스테이징/프로덕션 분리, 배포 슬롯 전략은 아직 확정 전이며 후속 인프라 작업은 [`tasks/todo.md`](tasks/todo.md)에 정리합니다.
 
 ## Runtime Notes
 
 - OpenAI API key must never be exposed to the client bundle, browser storage, or logs.
-- Current rate limiting is in-memory and suitable only for a single runtime instance. Before multi-instance production deployment, move rate-limit state to an external store such as Redis or another shared cache.
+- Current rate limiting uses an HttpOnly per-client session cookie by default and remains in-memory, so it is suitable only for a single runtime instance. Before multi-instance production deployment, move rate-limit state to an external store such as Redis or another shared cache.
 - MVP stores user task session state in LocalStorage only; there is no server database yet.

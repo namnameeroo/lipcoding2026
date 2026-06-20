@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import {useEffect, useState} from "react";
+import {Component, useEffect, useState} from "react";
+import type {ErrorInfo, ReactNode} from "react";
 import {EmotionFallback2D} from "@/components/visuals/EmotionFallback2D";
 import type {EmotionTag} from "@/types/tasks";
 
@@ -23,9 +24,56 @@ type NavigatorWithMemory = Navigator & {
   deviceMemory?: number;
 };
 
+type WebGLContext = WebGLRenderingContext | WebGL2RenderingContext;
+
+type SceneErrorBoundaryProps = {
+  children: ReactNode;
+  onError: () => void;
+};
+
+type SceneErrorBoundaryState = {
+  failed: boolean;
+};
+
+class SceneErrorBoundary extends Component<
+  SceneErrorBoundaryProps,
+  SceneErrorBoundaryState
+> {
+  state: SceneErrorBoundaryState = {failed: false};
+
+  static getDerivedStateFromError(): SceneErrorBoundaryState {
+    return {failed: true};
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("Failed to render 3D emotion scene", error, errorInfo);
+    this.props.onError();
+  }
+
+  render() {
+    if (this.state.failed) {
+      return null;
+    }
+
+    return this.props.children;
+  }
+}
+
 function canUseWebGL(): boolean {
   const canvas = document.createElement("canvas");
-  return Boolean(canvas.getContext("webgl2") || canvas.getContext("webgl"));
+  let context: WebGLContext | null = null;
+
+  try {
+    context = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+    return Boolean(context);
+  } catch (error) {
+    console.warn("WebGL support check failed", error);
+    return false;
+  } finally {
+    context?.getExtension("WEBGL_lose_context")?.loseContext();
+    canvas.width = 0;
+    canvas.height = 0;
+  }
 }
 
 function shouldUseFallback(): boolean {
@@ -57,11 +105,13 @@ export function EmotionVisual({emotionTag, progress, completed}: EmotionVisualPr
       />
       {!fallback ? (
         <div className="absolute inset-0 opacity-80">
-          <EmotionScene
-            emotionTag={emotionTag}
-            progress={progress}
-            completed={completed}
-          />
+          <SceneErrorBoundary onError={() => setFallback(true)}>
+            <EmotionScene
+              emotionTag={emotionTag}
+              progress={progress}
+              completed={completed}
+            />
+          </SceneErrorBoundary>
         </div>
       ) : null}
     </div>
