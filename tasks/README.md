@@ -13,6 +13,7 @@ updated: "2026-06-20"
 - [decision-log.md](decision-log.md): Product and engineering decisions.
 - [project-info.md](project-info.md): Stable project facts and setup notes.
 - [code-notes.md](code-notes.md): Implementation notes that help future code changes.
+- [requirements-analysis.md](requirements-analysis.md): Implementation-ready MVP requirements derived from the brainstorm.
 
 ## Maintenance Rules
 
