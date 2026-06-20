@@ -1,12 +1,7 @@
-# azd 배포 시 제외할 파일들
-.git
+# azd packages only `.next/standalone` (see azure.yaml `dist`).
+# Do NOT add `node_modules` here — the standalone server bundles a
+# trimmed node_modules (including `next`) that is required at runtime.
+
+# Build cache is not needed at runtime.
 .next/cache
-node_modules
 *.log
-.env.local
-.env*.local
-tasks/
-BRAINSTORM.md
-CLAUDE.md
-REFERENCES.md
-app.zip

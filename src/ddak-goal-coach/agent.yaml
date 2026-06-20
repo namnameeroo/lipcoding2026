@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/microsoft/AgentSchema/refs/heads/main/schemas/v1.0/ContainerAgent.yaml
+
+kind: hosted
+name: ddak-goal-coach
+description: |
+    Ddak Goal Coach turns overwhelming goals into safe, concrete two-minute actions for Korean users.
+metadata:
+    tags:
+        - Agent Framework
+        - AI Agent Hosting
+        - Azure AI AgentServer
+        - Responses Protocol
+        - Streaming
+        - Ddak
+        - Productivity
+        - Responsible AI
+protocols:
+    - protocol: responses
+      version: 1.0.0
+resources:
+    cpu: "1"
+    memory: 2Gi
+environment_variables:
+    - name: AZURE_AI_MODEL_DEPLOYMENT_NAME
+      value: gpt-4.1-mini
+code_configuration:
+    runtime: python_3_13
+    entry_point: main.py
+    dependency_resolution: remote_build

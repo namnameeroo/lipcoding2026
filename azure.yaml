@@ -1,21 +1,39 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
 name: ddak
 metadata:
-  template: ddak-nextjs@0.0.1
-
+    template: ddak-nextjs@0.0.1
 services:
-  web:
-    project: .
-    language: js
-    host: appservice
-    dist: .next/standalone
-
+    ddak-goal-coach:
+        project: src/ddak-goal-coach
+        host: azure.ai.agent
+        language: python
+        config:
+            container:
+                resources:
+                    cpu: "1"
+                    memory: 2Gi
+            deployments:
+                - model:
+                    format: OpenAI
+                    name: gpt-4.1-mini
+                    version: "2025-04-14"
+                  name: gpt-4.1-mini
+                  sku:
+                    capacity: 10
+                    name: GlobalStandard
+    web:
+        project: .
+        host: appservice
+        language: js
+        dist: .next/standalone
 hooks:
-  prepackage:
-    posix:
-      shell: sh
-      run: |
-        npm run build
-        cp -r public .next/standalone/public
-        cp -r .next/static .next/standalone/.next/static
-      continueOnError: false
-      interactive: false
+    prepackage:
+        posix:
+            name: prepackage
+            kind: sh
+            shell: sh
+            run: |
+                npm run build
+                cp -r public .next/standalone/public
+                cp -r .next/static .next/standalone/.next/static
