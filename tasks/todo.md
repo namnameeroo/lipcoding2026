@@ -12,44 +12,34 @@ entry_format: "- [ ] Task description - owner - date or milestone"
 
 ## Active
 
-### Phase 1. 기반 정리
-- [ ] 핵심 의존성 추가 (openai, zod, zustand, framer-motion, three, @react-three/fiber, @react-three/drei) - 미정
-- [ ] `src/types/tasks.ts` 공유 타입 정의 (EmotionTag, TaskStatus, MoodEmoji, MicroTask, TaskSession) - 미정
-- [ ] `src/lib/emotions.ts` 감정 태그·프로필·라벨 단일 소스 정의 - 미정
-- [ ] 플레이스홀더 대시보드(`src/app/page.tsx`) 교체 계획 확정 - 미정
-- [ ] 앱 이름/메타데이터 딱(Ddak) 기준 정리 (`layout.tsx`) - 미정
+### Phase 6. 마감 품질
+- [ ] 검증 시나리오 수동 확인 - 미정
 
 ## Backlog
-
-### Phase 2. AI 분석 API
-- [ ] `src/app/api/analyze/route.ts` POST 핸들러 - 미정
-- [ ] `src/lib/ai/analyzeGoal.ts` `gpt-4o-mini` OpenAI 호출 + zod JSON 스키마 검증 - 미정
-- [ ] `src/lib/rate-limit.ts` IP당 분당 5회 제한 - 미정
-- [ ] 입력 오류(400)/제한(429)/서버 오류(500) 분기 - 미정
-
-### Phase 3. 상태와 저장소
-- [ ] `src/store/taskSessionStore.ts` Zustand store - 미정
-- [ ] LocalStorage persistence (`ddak.task-session.v1`) - 미정
-- [ ] LocalStorage 파싱/스키마 실패 시 초기화 프롬프트 - 미정
-- [ ] 세션 생성/복구/폐기, 완료, 이모지 저장 액션 - 미정
-
-### Phase 4. 핵심 UX
-- [ ] GoalInput / AnalyzeLoading / CurrentTaskCard / TaskQueuePreview - 미정
-- [ ] MoodCheck(선택/건너뛰기) / ResumePrompt - 미정
-- [ ] 시작·완료·전체 완료 플로우 연결 - 미정
-
-### Phase 5. 감정 반응형 비주얼
-- [ ] `EmotionVisual.tsx` 3D/2D 선택 래퍼 + 3D 지연 로딩 - 미정
-- [ ] `EmotionScene.tsx` 3D + 태그별 recipe/material/motion - 미정
-- [ ] 완료율 기반 부드러움 변화 - 미정
-- [ ] `EmotionFallback2D.tsx` + 3D/2D 선택 규칙 적용 - 미정
-- [ ] `ParticleBurst.tsx` 시작/완료 보상 효과 - 미정
-
-### Phase 6. 마감 품질
-- [ ] 오류 문구·접근성·반응형 점검 - 미정
-- [ ] `npm run lint` / `npm run build` 통과 - 미정
-- [ ] 검증 시나리오 수동 확인 - 미정
 
 ## Done
 
 - [x] 브레인스토밍 기반 상세 요구사항 분석 문서화 (`requirements-analysis.md`) - 2026-06-20
+- [x] 핵심 의존성 추가 (openai, zod, zustand, framer-motion, three, @react-three/fiber, @react-three/drei) - 2026-06-20
+- [x] `src/types/tasks.ts` 공유 타입 정의 (EmotionTag, TaskStatus, MoodEmoji, MicroTask, TaskSession) - 2026-06-20
+- [x] `src/lib/emotions.ts` 감정 태그·프로필·라벨 단일 소스 정의 - 2026-06-20
+- [x] 플레이스홀더 대시보드(`src/app/page.tsx`)를 MVP 앱으로 교체 - 2026-06-20
+- [x] 앱 이름/메타데이터 딱(Ddak) 기준 정리 (`layout.tsx`) - 2026-06-20
+- [x] `src/app/api/analyze/route.ts` POST 핸들러 - 2026-06-20
+- [x] `src/lib/ai/analyzeGoal.ts` `gpt-4o-mini` OpenAI 호출 + zod JSON 스키마 검증 - 2026-06-20
+- [x] `src/lib/rate-limit.ts` IP당 분당 5회 제한 - 2026-06-20
+- [x] 입력 오류(400)/제한(429)/서버 오류(500) 분기 - 2026-06-20
+- [x] `src/store/taskSessionStore.ts` Zustand store - 2026-06-20
+- [x] LocalStorage persistence (`ddak.task-session.v1`) - 2026-06-20
+- [x] LocalStorage 파싱/스키마 실패 시 초기화 프롬프트 - 2026-06-20
+- [x] 세션 생성/복구/폐기, 완료, 이모지 저장 액션 - 2026-06-20
+- [x] GoalInput / AnalyzeLoading / CurrentTaskCard / TaskQueuePreview - 2026-06-20
+- [x] MoodCheck(선택/건너뛰기) / ResumePrompt - 2026-06-20
+- [x] 시작·완료·전체 완료 플로우 연결 - 2026-06-20
+- [x] `EmotionVisual.tsx` 3D/2D 선택 래퍼 + 3D 지연 로딩 - 2026-06-20
+- [x] `EmotionScene.tsx` 3D + 태그별 recipe/material/motion - 2026-06-20
+- [x] 완료율 기반 부드러움 변화 - 2026-06-20
+- [x] `EmotionFallback2D.tsx` + 3D/2D 선택 규칙 적용 - 2026-06-20
+- [x] `ParticleBurst.tsx` 시작/완료 보상 효과 - 2026-06-20
+- [x] 오류 문구·접근성·반응형 점검 - 2026-06-20
+- [x] `npm run lint` / `npm run build` 통과 - 2026-06-20

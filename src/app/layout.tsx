@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lipcoding 2026",
-  description: "A starter shell for the Lipcoding 2026 web service.",
+  title: "딱(Ddak)",
+  description: "큰 목표를 딱 2분짜리 첫 행동으로 쪼개 시작을 돕는 앱.",
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>

@@ -27,7 +27,7 @@ entry_policy: "Only add confirmed project facts. Do not use placeholder business
 - 스타일: Tailwind CSS 4 (`globals.css` `@import "tailwindcss"`)
 - 패키지 매니저: npm (`package-lock.json`)
 - 린트: ESLint (`eslint-config-next`)
-- 미설치(구현 시 추가 예정): openai, zod, zustand, framer-motion, three, @react-three/fiber, @react-three/drei
+- 설치됨: openai, zod, zustand, framer-motion, three, @react-three/fiber, @react-three/drei
 - 기본 AI 모델: `gpt-4o-mini`
 
 ## Commands
