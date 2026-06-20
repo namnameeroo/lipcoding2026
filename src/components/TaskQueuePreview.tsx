@@ -8,36 +8,54 @@ type TaskQueuePreviewProps = {
 };
 
 export function TaskQueuePreview({tasks, currentIndex}: TaskQueuePreviewProps) {
-  return (
-    <aside className="rounded-[2rem] border border-white/60 bg-white/55 p-5 shadow-2xl shadow-violet-200/40 backdrop-blur-xl">
-      <h2 className="text-lg font-black">남은 2분 행동</h2>
-      <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-        전체 계획은 흐리게만 보여드릴게요. 지금은 위 카드 하나만 하면 됩니다.
-      </p>
-      <ol className="mt-5 grid gap-3">
-        {tasks.map((task, index) => {
-          const isCurrent = index === currentIndex;
-          const isDone = task.status === "done";
+  const upcomingTasks = tasks.slice(currentIndex + 1);
+  const upcomingCount = upcomingTasks.length;
 
-          return (
-            <li
-              key={task.id}
-              className={`rounded-2xl border px-4 py-3 transition ${
-                isCurrent
-                  ? "border-slate-950 bg-white text-slate-950"
-                  : "border-white/60 bg-white/45 text-slate-500 blur-[1px]"
-              } ${isDone ? "opacity-45 blur-0" : ""}`}
-            >
-              <div className="flex items-center gap-3">
-                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-slate-950 text-xs font-black text-white">
-                  {isDone ? "✓" : index + 1}
-                </span>
-                <span className="text-sm font-black">{task.title}</span>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+  return (
+    <aside className="p-1">
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl border border-white/55 px-4 py-3 text-left transition hover:border-violet-200 [&::-webkit-details-marker]:hidden">
+          <div>
+            <h2 className="text-base font-black">남은 2분 행동</h2>
+            <p className="mt-1 text-xs font-bold text-slate-500">
+              {upcomingCount > 0 ? (
+                <>
+                  <span className="group-open:hidden">
+                    {upcomingCount}개 다음 행동 보기
+                  </span>
+                  <span className="hidden group-open:inline">접어두기</span>
+                </>
+              ) : (
+                "마지막 행동"
+              )}
+            </p>
+          </div>
+          <span
+            className="grid size-8 shrink-0 place-items-center rounded-full border border-slate-300 text-sm font-black text-slate-700 transition group-open:rotate-180"
+            aria-hidden="true"
+          >
+            ↓
+          </span>
+        </summary>
+
+        {upcomingCount > 0 ? (
+          <ol className="mt-3 grid gap-2">
+            {upcomingTasks.map((task, index) => (
+              <li
+                key={task.id}
+                className="rounded-2xl border border-white/50 px-4 py-3 text-slate-600"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full border border-slate-300 text-xs font-black text-slate-600">
+                    {currentIndex + index + 2}
+                  </span>
+                  <span className="text-sm font-black">{task.title}</span>
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : null}
+      </details>
     </aside>
   );
 }

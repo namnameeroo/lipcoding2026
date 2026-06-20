@@ -144,13 +144,7 @@ export function AnalyzeLoading({goalLabel}: AnalyzeLoadingProps) {
               }
               transition={{duration: 2.4, repeat: Infinity, ease: "easeInOut"}}
             >
-              <circle
-                cx="52"
-                cy="42"
-                r="34"
-                fill="white"
-                opacity="0.22"
-              />
+              <circle cx="52" cy="42" r="34" fill="white" opacity="0.22" />
             </motion.g>
           </motion.g>
 
