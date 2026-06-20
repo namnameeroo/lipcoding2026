@@ -1,7 +1,9 @@
 import {NextRequest, NextResponse} from "next/server";
 import {z} from "zod";
+import {GoalCoachAgentError} from "@/lib/ai/goalCoachAgent";
 import {analyzeGoal} from "@/lib/ai/analyzeGoal";
 import {checkRateLimit} from "@/lib/rate-limit";
+import {logTelemetry, safeSerializeError} from "@/lib/telemetry";
 
 export const runtime = "nodejs";
 
@@ -16,6 +18,7 @@ const trustClientIpHeaders = process.env.TRUST_CLIENT_IP_HEADERS === "true";
 const clientIdentifierCookieName = "ddak.client-id";
 const clientRateLimitPerMinute = 5;
 const globalRateLimitPerMinute = 300;
+const requestIdHeader = "X-Request-ID";
 
 type ClientIdentifier = {
   rateLimitKey: string;
@@ -33,6 +36,20 @@ function firstHeaderValue(value: string | null): string | null {
 }
 
 function createClientCookieValue(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function createRequestId(request: NextRequest): string {
+  const incomingRequestId = request.headers.get("x-request-id")?.trim();
+
+  if (incomingRequestId && /^[a-zA-Z0-9._:-]{8,100}$/.test(incomingRequestId)) {
+    return incomingRequestId;
+  }
+
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
   }
@@ -85,6 +102,10 @@ function setRateLimitHeaders(response: NextResponse, remaining: number, resetAt:
   response.headers.set("X-RateLimit-Reset", String(resetAt));
 }
 
+function setRetryAfterHeader(response: NextResponse, retryAfterSeconds: number) {
+  response.headers.set("Retry-After", String(Math.max(1, Math.ceil(retryAfterSeconds))));
+}
+
 function setClientIdentifierCookie(response: NextResponse, clientIdentifier: ClientIdentifier) {
   if (!clientIdentifier.cookieValueToSet) {
     return;
@@ -103,9 +124,11 @@ function finalizeResponse(
   clientIdentifier: ClientIdentifier,
   remaining: number,
   resetAt: number,
+  requestId: string,
 ) {
   setRateLimitHeaders(response, remaining, resetAt);
   setClientIdentifierCookie(response, clientIdentifier);
+  response.headers.set(requestIdHeader, requestId);
 
   return response;
 }
@@ -155,12 +178,20 @@ async function parseJsonBody(request: NextRequest): Promise<unknown> {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = createRequestId(request);
+  const startedAt = Date.now();
   const clientIdentifier = getClientIdentifier(request);
   const globalRateLimit = checkRateLimit("api:analyze:global", globalRateLimitPerMinute);
 
   if (!globalRateLimit.allowed) {
     const response = errorResponse("요청이 너무 많아요. 잠시 후 다시 시도해 주세요.", 429);
-    return finalizeResponse(response, clientIdentifier, 0, globalRateLimit.resetAt);
+    setRetryAfterHeader(response, (globalRateLimit.resetAt - Date.now()) / 1000);
+    logTelemetry("warn", "analyze_rate_limited", {
+      requestId,
+      bucket: "global",
+      durationMs: Date.now() - startedAt,
+    });
+    return finalizeResponse(response, clientIdentifier, 0, globalRateLimit.resetAt, requestId);
   }
 
   const clientRateLimit = checkRateLimit(
@@ -170,7 +201,13 @@ export async function POST(request: NextRequest) {
 
   if (!clientRateLimit.allowed) {
     const response = errorResponse("요청이 너무 많아요. 잠시 후 다시 시도해 주세요.", 429);
-    return finalizeResponse(response, clientIdentifier, 0, clientRateLimit.resetAt);
+    setRetryAfterHeader(response, (clientRateLimit.resetAt - Date.now()) / 1000);
+    logTelemetry("warn", "analyze_rate_limited", {
+      requestId,
+      bucket: "client",
+      durationMs: Date.now() - startedAt,
+    });
+    return finalizeResponse(response, clientIdentifier, 0, clientRateLimit.resetAt, requestId);
   }
 
   const remaining = Math.min(globalRateLimit.remaining, clientRateLimit.remaining);
@@ -182,6 +219,7 @@ export async function POST(request: NextRequest) {
       clientIdentifier,
       remaining,
       resetAt,
+      requestId,
     );
   }
 
@@ -193,6 +231,7 @@ export async function POST(request: NextRequest) {
       clientIdentifier,
       remaining,
       resetAt,
+      requestId,
     );
   }
 
@@ -207,15 +246,21 @@ export async function POST(request: NextRequest) {
         clientIdentifier,
         remaining,
         resetAt,
+        requestId,
       );
     }
 
-    console.warn("Invalid JSON sent to /api/analyze", error);
+    logTelemetry("warn", "analyze_invalid_json", {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      errorName: error instanceof Error ? error.name : "unknown",
+    });
     return finalizeResponse(
       errorResponse("요청 형식이 올바르지 않아요.", 400),
       clientIdentifier,
       remaining,
       resetAt,
+      requestId,
     );
   }
 
@@ -227,20 +272,51 @@ export async function POST(request: NextRequest) {
       clientIdentifier,
       remaining,
       resetAt,
+      requestId,
     );
   }
 
   try {
-    const result = await analyzeGoal(parsed.data.goal);
+    const result = await analyzeGoal(parsed.data.goal, {requestId});
     const response = NextResponse.json(result);
-    return finalizeResponse(response, clientIdentifier, remaining, resetAt);
+    logTelemetry("info", "analyze_request_success", {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      goalLength: parsed.data.goal.length,
+      taskCount: result.tasks.length,
+    });
+    return finalizeResponse(response, clientIdentifier, remaining, resetAt, requestId);
   } catch (error) {
-    console.error("Goal analysis failed", error);
+    if (error instanceof GoalCoachAgentError) {
+      const response = errorResponse(error.message, error.status);
+
+      if (error.retryAfterSeconds) {
+        setRetryAfterHeader(response, error.retryAfterSeconds);
+      }
+
+      logTelemetry(error.status >= 500 ? "error" : "warn", "analyze_agent_error", {
+        requestId,
+        durationMs: Date.now() - startedAt,
+        goalLength: parsed.data.goal.length,
+        errorCode: error.code,
+        status: error.status,
+      });
+
+      return finalizeResponse(response, clientIdentifier, remaining, resetAt, requestId);
+    }
+
+    logTelemetry("error", "analyze_unhandled_error", {
+      requestId,
+      durationMs: Date.now() - startedAt,
+      errorName: error instanceof Error ? error.name : "unknown",
+      errorMessage: safeSerializeError(error).message,
+    });
     return finalizeResponse(
       errorResponse("목표를 분석하지 못했어요. 잠시 후 다시 시도해 주세요.", 500),
       clientIdentifier,
       remaining,
       resetAt,
+      requestId,
     );
   }
 }

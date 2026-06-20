@@ -1,0 +1,20 @@
+{"id":"eval-001","goal":"논문 초안 쓰기","expectedEmotionTag":"burden","qualityCriteria":["첫 문장을 쓰거나 문서 파일을 여는 물리 행동","조사하기/계획하기 같은 추상 표현 금지","5~10개 태스크"]}
+{"id":"eval-002","goal":"방 정리하기","expectedEmotionTag":"routine","qualityCriteria":["손에 잡히는 물건 하나를 옮기는 행동","2분 안에 시작 가능","완벽한 정리 요구 금지"]}
+{"id":"eval-003","goal":"포트폴리오 웹사이트 만들기","expectedEmotionTag":"creative","qualityCriteria":["프로젝트 폴더 열기 또는 제목 작성 같은 첫 행동","과도한 설계 태스크 금지","한국어 자연스러움"]}
+{"id":"eval-004","goal":"세금 신고 준비하기","expectedEmotionTag":"urgent","qualityCriteria":["공식 홈택스/자료 폴더 열기 같은 안전한 시작","전문 세무 조언 대체 금지","개인정보 로그 금지"]}
+{"id":"eval-005","goal":"운동 습관 만들기","expectedEmotionTag":"routine","qualityCriteria":["운동복 꺼내기 등 2분 행동","무리한 운동 처방 금지","반복 가능한 작은 행동"]}
+{"id":"eval-006","goal":"이력서 업데이트하기","expectedEmotionTag":"burden","qualityCriteria":["파일 열기/최근 경험 한 줄 쓰기","완성 압박 줄이기","중복 태스크 금지"]}
+{"id":"eval-007","goal":"새 프레임워크 공부하기","expectedEmotionTag":"new","qualityCriteria":["공식 문서 첫 페이지 열기","한 개 예제만 실행","광범위한 학습 계획 금지"]}
+{"id":"eval-008","goal":"팀 발표 자료 만들기","expectedEmotionTag":"urgent","qualityCriteria":["슬라이드 파일 생성 또는 제목 작성","역할/마감 압박을 작은 행동으로 분해","5~10개 태스크"]}
+{"id":"eval-009","goal":"개인 블로그 글 쓰기","expectedEmotionTag":"creative","qualityCriteria":["제목 후보 하나 쓰기","글 전체 작성 요구 금지","사용자 주도권 유지"]}
+{"id":"eval-010","goal":"밀린 이메일 처리하기","expectedEmotionTag":"burden","qualityCriteria":["메일함 열고 한 통 표시","대량 처리 요구 금지","2분 행동성"]}
+{"id":"eval-011","goal":"냉장고 청소하기","expectedEmotionTag":"routine","qualityCriteria":["유통기한 지난 항목 하나 확인","물리 행동 중심","완료 가능성 높음"]}
+{"id":"eval-012","goal":"창업 아이디어 검증하기","expectedEmotionTag":"new","qualityCriteria":["가설 한 문장 쓰기","시장조사 전체 요구 금지","불확실성 낮추는 첫 행동"]}
+{"id":"eval-013","goal":"디자인 시안 만들기","expectedEmotionTag":"creative","qualityCriteria":["캔버스 열기/색상 하나 고르기","창의적 부담 완화","추상 표현 금지"]}
+{"id":"eval-014","goal":"시험 공부 시작하기","expectedEmotionTag":"difficult","qualityCriteria":["교재 특정 페이지 열기","한 문제만 표시","과도한 계획 금지"]}
+{"id":"eval-015","goal":"가계부 정리하기","expectedEmotionTag":"routine","qualityCriteria":["앱 열기/영수증 하나 입력","금융 조언 대체 금지","개인정보 보호"]}
+{"id":"eval-016","goal":"부모님께 안부 전화하기","expectedEmotionTag":"burden","qualityCriteria":["연락처 열기/첫 문장 쓰기","감정 부담 완화","직접 실행 가능한 행동"]}
+{"id":"eval-017","goal":"프로젝트 버그 수정하기","expectedEmotionTag":"difficult","qualityCriteria":["에러 로그 한 줄 복사","파일 하나 열기","복잡한 해결책 강요 금지"]}
+{"id":"eval-018","goal":"여행 계획 세우기","expectedEmotionTag":"new","qualityCriteria":["지도 앱 열기/목적지 하나 저장","전체 일정 완성 요구 금지","즐거운 탐색 유지"]}
+{"id":"eval-019","goal":"긴급 보고서 제출하기","expectedEmotionTag":"urgent","qualityCriteria":["문서 파일 만들기/제목 작성","마감 압박을 첫 행동으로 축소","명확한 2분 행동"]}
+{"id":"eval-020","goal":"건강검진 결과 확인하기","expectedEmotionTag":"burden","qualityCriteria":["검진 결과 파일 열기","의학적 판단 대신 전문가 확인 안내","불안 완화형 첫 행동"]}

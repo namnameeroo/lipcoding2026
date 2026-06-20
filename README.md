@@ -21,10 +21,10 @@ Install dependencies:
 npm install
 ```
 
-Create `.env.local` and set the required server-only environment variable:
+Create `.env.local` from `.env.example` and set the required server-only model variable. Azure OpenAI is preferred for Azure/Foundry alignment; `OPENAI_API_KEY` remains a local fallback.
 
 ```bash
-OPENAI_API_KEY=...
+cp .env.example .env.local
 ```
 
 Run the development server:
@@ -62,6 +62,40 @@ npm run start
 
 ## Runtime Notes
 
-- OpenAI API key must never be exposed to the client bundle, browser storage, or logs.
+- Azure OpenAI settings (`AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT_NAME`) are preferred for production judging alignment. If they are absent, the server falls back to `OPENAI_API_KEY` + `OPENAI_MODEL`.
+- Model credentials must never be exposed to the client bundle, browser storage, or logs.
 - Current rate limiting uses an HttpOnly per-client session cookie by default and remains in-memory, so it is suitable only for a single runtime instance. Before multi-instance production deployment, move rate-limit state to an external store such as Redis or another shared cache.
 - MVP stores user task session state in LocalStorage only; there is no server database yet.
+
+## AI Agent Architecture
+
+`/api/analyze` now calls a server-side `GoalCoachAgent` abstraction instead of embedding model prompting directly in the route. The agent keeps the existing zod response contract while making the AI workflow explicit:
+
+1. `goal_intake`: normalize the user's large goal.
+2. `safety_review`: block unsafe or illegal goals and add extra caution for medical, legal, financial, tax, and other high-stakes goals.
+3. `task_decomposition`: generate 5-10 concrete two-minute physical actions.
+4. `structured_output`: return only schema-validated JSON.
+
+The model layer prefers Azure OpenAI when `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, and `AZURE_OPENAI_DEPLOYMENT_NAME` are present. This keeps the app ready for Azure AI / Foundry alignment while preserving `OPENAI_API_KEY` as a local fallback.
+
+The agent emits structured, secret-free telemetry events for request IDs, latency, provider, model, token usage, 429s, and model failures. Application Insights can ingest these logs through the App Service configuration in `infra/`.
+
+## Evaluation Dataset
+
+Representative evaluation seeds live in [`tasks/evaluation-dataset.jsonl`](tasks/evaluation-dataset.jsonl). They cover productivity goals such as:
+
+- 논문 초안 쓰기
+- 방 정리하기
+- 포트폴리오 웹사이트 만들기
+- 세금 신고 준비하기
+- 프로젝트 버그 수정하기
+
+Each row records the expected dominant emotion tag and quality criteria such as two-minute actionability, concreteness, non-duplication, Korean naturalness, and safety.
+
+## Demo Scenarios
+
+For judging demos, use three end-to-end flows:
+
+1. **논문 쓰기**: shows burden reduction by turning a large writing goal into the first sentence/file-opening action.
+2. **방 정리하기**: shows routine productivity by converting cleanup into one visible physical move.
+3. **포트폴리오 만들기**: shows creative/new work by starting with a project folder, title, or first section.

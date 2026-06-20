@@ -7,11 +7,15 @@ services:
     project: .
     language: js
     host: appservice
+    dist: .next/standalone
 
 hooks:
   prepackage:
     posix:
       shell: sh
-      run: npm ci && npm run build
+      run: |
+        npm run build
+        cp -r public .next/standalone/public
+        cp -r .next/static .next/standalone/.next/static
       continueOnError: false
       interactive: false

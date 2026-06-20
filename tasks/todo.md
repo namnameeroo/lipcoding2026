@@ -12,6 +12,10 @@ entry_format: "- [ ] Task description - owner - date or milestone"
 
 ## Active
 
+### Judging Rubric / 심사 고득점화
+- [ ] AI 태스크 검토/수정 화면 추가: 분석 결과를 세션으로 확정하기 전에 사용자가 태스크 수정·삭제·재생성을 선택할 수 있게 설계 - 프론트엔드/UX - rubric-p1
+- [ ] Microsoft Foundry 원격 project/model deployment 연결: 실제 Foundry project endpoint, model deployment, eval suite를 구성하고 배포 전 local/remote invoke 검증 - AI/인프라 - rubric-p0
+
 ### Infrastructure / Azure 배포 준비
 - [ ] Azure 구독, 리소스 그룹, 리전 확정 - 인프라 - pre-deploy
 - [ ] 스테이징/프로덕션 환경 이름, URL, 배포 슬롯 전략 정리 - 인프라 - pre-deploy
@@ -59,3 +63,11 @@ entry_format: "- [ ] Task description - owner - date or milestone"
 - [x] GitHub Actions 기반 CI/CD 구성(`npm ci`, `npm run lint`, `npm run build`, App Service deploy) - 2026-06-20
 - [x] Application Insights / Log Analytics 연결 Bicep 구성 - 2026-06-20
 - [x] 배포 후 smoke test 경로 정의(`/api/health`) 및 GitHub Actions smoke test 구성 - 2026-06-20
+- [x] Copilot SDK 또는 Microsoft Agent Framework 적용 방향 확정: `GoalCoachAgent` 단계형 workflow로 우선 추상화하고 Foundry 원격 연결은 후속 작업으로 분리 - 2026-06-20
+- [x] `analyzeGoal`을 `GoalCoachAgent` 추상화로 분리: goal intake, safety review, task decomposition, structured output 책임 분리 및 zod 응답 계약 유지 - 2026-06-20
+- [x] Azure OpenAI 모델 계층 전환 기반 추가: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_DEPLOYMENT_NAME` 우선 사용 + OpenAI fallback 유지 - 2026-06-20
+- [x] 로컬 평가 dataset 작성: `tasks/evaluation-dataset.jsonl`에 대표 목표 20개와 품질 기준 정의 - 2026-06-20
+- [x] Responsible AI guardrail baseline 추가: 위험/불법 목표 차단, 고위험 목표 전문가 확인 지침, 안전 fallback 메시지 - 2026-06-20
+- [x] App Insights custom telemetry 이벤트 스키마 구체화: request id, latency, 429/500, model error, token usage를 개인정보 없이 JSON 로그로 기록 - 2026-06-20
+- [x] 심사용 README/데모 시나리오 작성: Agent workflow, Azure OpenAI 우선 모델 계층, evaluation dataset, 3개 데모 흐름 문서화 - 2026-06-20
+- [x] Vitest 기반 최소 회귀 테스트 도입: rate limit, GoalCoachAgent safety/model config 테스트와 CI test 단계 추가 - 2026-06-20

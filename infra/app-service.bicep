@@ -11,6 +11,19 @@ param resourceToken string
 @secure()
 param openAiApiKey string
 
+@description('Azure OpenAI endpoint')
+param azureOpenAiEndpoint string = ''
+
+@description('Azure OpenAI API key')
+@secure()
+param azureOpenAiApiKey string = ''
+
+@description('Azure OpenAI model deployment name')
+param azureOpenAiDeploymentName string = ''
+
+@description('Azure OpenAI API version')
+param azureOpenAiApiVersion string = '2024-10-21'
+
 var appServicePlanName = 'plan-${resourceToken}'
 var webAppName = 'ddak-${resourceToken}'
 var logAnalyticsWorkspaceName = 'log-${resourceToken}'
@@ -64,7 +77,7 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
     siteConfig: {
       linuxFxVersion: 'NODE|20-lts'
       nodeVersion: '~20'
-      appCommandLine: 'npm run start'
+      appCommandLine: 'node server.js'
       alwaysOn: true
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
@@ -72,6 +85,22 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
         {
           name: 'OPENAI_API_KEY'
           value: openAiApiKey
+        }
+        {
+          name: 'AZURE_OPENAI_ENDPOINT'
+          value: azureOpenAiEndpoint
+        }
+        {
+          name: 'AZURE_OPENAI_API_KEY'
+          value: azureOpenAiApiKey
+        }
+        {
+          name: 'AZURE_OPENAI_DEPLOYMENT_NAME'
+          value: azureOpenAiDeploymentName
+        }
+        {
+          name: 'AZURE_OPENAI_API_VERSION'
+          value: azureOpenAiApiVersion
         }
         {
           name: 'NODE_ENV'
@@ -91,7 +120,7 @@ resource webApp 'Microsoft.Web/sites@2022-03-01' = {
         }
         {
           name: 'SCM_DO_BUILD_DURING_DEPLOYMENT'
-          value: 'true'
+          value: 'false'
         }
         {
           name: 'WEBSITE_NODE_DEFAULT_VERSION'
