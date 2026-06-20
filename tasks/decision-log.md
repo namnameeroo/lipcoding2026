@@ -129,3 +129,15 @@ Decision: 3D 씬은 클라이언트 전용 지연 로딩으로 분리하고, 3D 
 Reasoning: AI 입력과 태스크 진행은 3D 번들 로딩이나 WebGL 지원 여부와 독립적으로 동작해야 한다.
 
 Consequences: `EmotionVisual` 같은 래퍼가 3D/2D 선택 규칙을 담당하고, `EmotionScene`은 브라우저 전용 컴포넌트로 분리한다.
+
+## 2026-06-20: Azure 1차 배포 후보는 App Service Linux
+
+Status: proposed
+
+Context: 배포 환경을 Azure로 준비해야 하며, 현재 앱은 `/api/analyze` Route Handler에서 서버 전용 `OPENAI_API_KEY`로 OpenAI를 호출한다.
+
+Decision: 1차 배포 후보를 Azure App Service Linux + Node.js 20+로 둔다. Azure Static Web Apps 또는 Container Apps는 비용, 운영 복잡도, Next.js 서버 기능 지원 범위를 비교한 뒤 대안으로 검토한다.
+
+Reasoning: App Service는 Node.js 서버 런타임, App Settings 기반 비밀 주입, Application Insights 연동, 배포 슬롯 전략을 MVP 운영 요구사항에 맞게 제공한다.
+
+Consequences: IaC, CI/CD, App Settings, 관측성, 비용 알림 작업을 App Service 기준으로 먼저 정리한다. 다중 인스턴스 운영 전에는 인메모리 rate limit을 외부 공유 저장소로 교체해야 한다.

@@ -12,6 +12,18 @@ entry_format: "- [ ] Task description - owner - date or milestone"
 
 ## Active
 
+### Infrastructure / Azure 배포 준비
+- [ ] Azure 구독, 리소스 그룹, 리전 확정 - 인프라 - pre-deploy
+- [ ] 배포 대상 확정: App Service Linux(Node.js 20+) 우선, Static Web Apps/Container Apps 대안 비교 - 인프라 - pre-deploy
+- [ ] `OPENAI_API_KEY` 비밀 관리 방식 확정(App Settings 단독 또는 Key Vault 연동) - 인프라 - pre-deploy
+- [ ] App Service Plan/Web App IaC 작성(Bicep, Terraform, 또는 azd) - 인프라 - pre-deploy
+- [ ] GitHub Actions 또는 azd 기반 CI/CD 구성(`npm ci`, `npm run lint`, `npm run build`, deploy) - 인프라 - pre-deploy
+- [ ] 스테이징/프로덕션 환경 이름, URL, 배포 슬롯 전략 정리 - 인프라 - pre-deploy
+- [ ] Application Insights / Log Analytics 연결 및 `/api/analyze` 오류·지연·429 모니터링 설정 - 인프라 - pre-deploy
+- [ ] 배포 후 smoke test 경로와 수동 검증 시나리오 정의 - QA/인프라 - pre-deploy
+- [ ] 다중 인스턴스 배포 전 rate limit 저장소 외부화(Redis/KV 등) 검토 - 백엔드/인프라 - production-readiness
+- [ ] OpenAI 사용량 예산, Azure 비용 알림, App Service SKU 가드레일 설정 - 인프라 - production-readiness
+
 ### Phase 6. 마감 품질
 - [ ] 검증 시나리오 수동 확인 - 미정
 

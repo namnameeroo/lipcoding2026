@@ -41,8 +41,17 @@ entry_policy: "Only add confirmed project facts. Do not use placeholder business
 ## Environments
 
 - 로컬: http://localhost:3000
-- 스테이징/프로덕션: 미정
+- 스테이징/프로덕션: Azure 배포 예정, 구독/리전/URL 미정
+- 1차 배포 후보: Azure App Service Linux + Node.js 20+
 - 필요한 환경 변수: `OPENAI_API_KEY` (서버 전용, `/api/analyze`에서만 사용)
+
+## Infrastructure Baseline
+
+- 서버 런타임 필요: `/api/analyze` Route Handler가 OpenAI를 호출하므로 정적 호스팅만으로는 기본 요구사항을 충족하지 않는다.
+- 비밀 관리: `OPENAI_API_KEY`는 Azure App Settings 또는 Key Vault 연동으로 주입하고 클라이언트 번들, LocalStorage, 로그에 노출하지 않는다.
+- 관측성: Application Insights / Log Analytics로 서버 오류, 지연 시간, 429 rate limit 응답을 추적한다.
+- 확장성 주의: 현재 rate limit은 인메모리이므로 App Service 다중 인스턴스 또는 슬롯 확장 전 외부 공유 저장소로 교체해야 한다.
+- 데이터 저장: MVP는 서버 DB 없이 LocalStorage만 사용한다. 계정, 히스토리, 서버 영구 저장은 후속 범위다.
 
 ## Important Paths
 

@@ -1,40 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 딱(Ddak)
+
+큰 목표를 2분짜리 마이크로 태스크로 쪼개 시작을 돕는 감정 반응형 웹 앱입니다. 사용자가 목표를 입력하면 서버 API가 OpenAI를 호출해 실행 가능한 작업 목록과 단일 감정 태그를 생성하고, 클라이언트는 3D 또는 2D 오브젝트로 진행 상태를 보여줍니다.
 
 ## Project Tracking
 
 Working notes for progress, decisions, todos, and project context live in [`tasks/`](tasks/).
 
+## Stack
+
+- Next.js 16.2.9 App Router, React 19.2.4, TypeScript strict
+- Tailwind CSS 4
+- OpenAI, zod, Zustand, Framer Motion, Three.js, React Three Fiber, drei
+- npm (`package-lock.json`)
+
 ## Getting Started
 
-First, run the development server:
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create `.env.local` and set the required server-only environment variable:
+
+```bash
+OPENAI_API_KEY=...
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Useful commands:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run build
+npm run start
+```
 
-## Learn More
+## Azure Deployment Baseline
 
-To learn more about Next.js, take a look at the following resources:
+1차 배포 후보는 **Azure App Service Linux + Node.js 20+** 입니다. 이 앱은 `/api/analyze` Route Handler에서 OpenAI를 호출하고 `OPENAI_API_KEY`를 서버 환경 변수로만 사용하므로, 정적 호스팅보다 서버 런타임이 있는 배포 대상을 기본 가정으로 둡니다.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+초기 Azure 구성 요소:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Resource Group
+- App Service Plan (Linux)
+- Web App for Node.js 20+
+- App Settings: `OPENAI_API_KEY`, `NODE_ENV=production`
+- Application Insights / Log Analytics for runtime errors, latency, and `/api/analyze` 429 monitoring
+- Optional: Key Vault integration for secret management
 
-## Deploy on Vercel
+배포 파이프라인은 `npm ci`, `npm run lint`, `npm run build`, Azure 배포 순서로 구성합니다. 실제 Azure 구독, 리전, SKU, 스테이징/프로덕션 분리는 아직 확정 전이며 후속 인프라 작업은 [`tasks/todo.md`](tasks/todo.md)에 정리합니다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Runtime Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- OpenAI API key must never be exposed to the client bundle, browser storage, or logs.
+- Current rate limiting is in-memory and suitable only for a single runtime instance. Before multi-instance production deployment, move rate-limit state to an external store such as Redis or another shared cache.
+- MVP stores user task session state in LocalStorage only; there is no server database yet.

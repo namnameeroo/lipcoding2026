@@ -4,6 +4,7 @@ type RateLimitBucket = {
 };
 
 const buckets = new Map<string, RateLimitBucket>();
+let lastCleanupAt = 0;
 
 export type RateLimitResult = {
   allowed: boolean;
@@ -17,6 +18,16 @@ export function checkRateLimit(
   windowMs = 60_000,
 ): RateLimitResult {
   const now = Date.now();
+
+  if (lastCleanupAt + windowMs <= now) {
+    buckets.forEach((bucket, bucketKey) => {
+      if (bucket.resetAt <= now) {
+        buckets.delete(bucketKey);
+      }
+    });
+    lastCleanupAt = now;
+  }
+
   const current = buckets.get(key);
 
   if (!current || current.resetAt <= now) {
