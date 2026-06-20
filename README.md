@@ -1,5 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project Tracking
+
+Working notes for progress, decisions, todos, and project context live in [`tasks/`](tasks/).
+
 ## Getting Started
 
 First, run the development server:
